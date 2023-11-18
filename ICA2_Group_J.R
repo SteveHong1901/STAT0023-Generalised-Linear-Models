@@ -8,13 +8,13 @@
 
 sink("ICA2_Code_Output.txt")
 
-# Importing allowed Libraries
+# Importing Libraries
 library("mgcv")
 library("ggplot2")
 library("grDevices")
 library("lattice")
 library("MASS")
-
+library("glmnet")
 
 ################################################################################
 
@@ -346,6 +346,29 @@ print(sum(cooks.distance(model3) > (8/(803-2*15))))
 ######################################################################################################
 cat("######################################################################################################")
 
+################################################################################
+
+# MODELLING WITH REGULARIZATION AND CROSS-VALIDATION (MODEL 4)
+
+cat("\nMODELLING WITH REGULARIZATION AND CROSS-VALIDATION (MODEL 4)\n")
+cat("######################################################################################################")
+
+# Preparing data for glmnet
+x <- model.matrix(~., data = Votedata[, -which(names(Votedata) == "proportion_leave")])
+y <- Votedata$proportion_leave
+
+# Cross-validation for LASSO Logistic Regression
+set.seed(123)  # For reproducibility
+cv_fit <- cv.glmnet(x, y, family = "binomial", alpha = 1) # LASSO
+
+# Best model at minimum lambda
+best_model <- glmnet(x, y, family = "binomial", lambda = cv_fit$lambda.min)
+
+# Summary of Model 4
+cat("\nSummary of Model 4 (Regularized Logistic Regression):\n")
+print(summary(best_model))
+
+
 # PREDICTION
 
 # FITTING ON TRAINING DATA
@@ -353,6 +376,7 @@ cat("###########################################################################
 prediction_1 <- predict(model1, data = Votedata, se.fit = TRUE, type = 'response')
 prediction_2 <- predict(model2, data = Votedata, se.fit = TRUE, type = 'response')
 prediction_3 <- predict(model3, data = Votedata, se.fit = TRUE, type = 'response')
+prediction_4 <- predict(model3, data = Votedata, se.fit = TRUE, type = 'response')
 
 
 
